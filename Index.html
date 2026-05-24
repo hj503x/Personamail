@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PersonaMail — One Inbox, Many Identities</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c26;
+    --border: #2a2a3a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --text: #e8e8f0;
+    --text-dim: #7a7a9a;
+    --text-dimmer: #44445a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    text-align: center;
+    padding: 80px 24px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(ellipse, rgba(108,99,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.4s;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(135deg, #6c63ff, #ff6584);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 520px;
+    margin: 0 auto 48px;
+    line-height: 1.7;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.6s;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- APP SHELL ---- */
+  .app-wrapper {
+    max-width: 1000px;
+    margin: 0 auto 80px;
+    padding: 0 16px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.8s;
+  }
+
+  .app-shell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+
+  /* ---- TITLEBAR ---- */
+  .titlebar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .titlebar-dots { display: flex; gap: 8px; }
+  .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .titlebar-url {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* ---- LAYOUT ---- */
+  .app-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 560px;
+  }
+
+  /* ---- SIDEBAR ---- */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-top {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    margin-bottom: 12px;
+  }
+
+  /* ---- PERSONA SWITCHER ---- */
+  .persona-switcher {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .persona-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+  }
+
+  .persona-btn:hover {
+    background: rgba(255,255,255,0.04);
+  }
+
+  .persona-btn.active {
+    border-color: var(--persona-color);
+    background: rgba(var(--persona-rgb), 0.08);
+  }
+
+  .persona-avatar {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--persona-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+
+  .persona-btn.active .persona-avatar {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(var(--persona-rgb), 0.4);
+  }
+
+  .persona-info { flex: 1; min-width: 0; }
+
+  .persona-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .persona-email {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .persona-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    background: var(--persona-color);
+    color: white;
+    padding: 2px 7px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+
+  .add-persona-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px dashed var(--border);
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-dimmer);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    width: 100%;
+    transition: all 0.2s ease;
+    margin-top: 4px;
+  }
+
+  .add-persona-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .add-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    border: 1px dashed currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  /* ---- SIDEBAR NAV ---- */
+  .sidebar-nav {
+    padding: 16px;
+    flex: 1;
+    border-top: 1px solid var(--border);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .nav-item.active-nav { background: rgba(108,99,255,0.1); color: var(--accent); }
+
+  .nav-icon { width: 16px; text-align: center; font-size: 14px; }
+  .nav-count {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    background: var(--accent);
+    color: white;
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+
+  /* ---- MAIN AREA ---- */
+  .main-area { display: flex; flex-direction: column; }
+
+  /* ---- PERSONA HEADER BAR ---- */
+  .persona-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.3s ease;
+  }
+
+  .persona-header-left { display: flex; align-items: center; gap: 12px; }
+
+  .persona-header-avatar {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .persona-header-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    transition: color 0.3s ease;
+  }
+
+  .persona-header-address {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 1px;
+  }
+
+  .compose-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .compose-btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+  /* ---- EMAIL LIST ---- */
+  .email-list { flex: 1; overflow-y: auto; }
+
+  .email-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .email-item:hover { background: rgba(255,255,255,0.03); }
+  .email-item.unread { background: rgba(108,99,255,0.04); }
+
+  .email-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--persona-dot, var(--accent));
+  }
+
+  .email-sender-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: white;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .email-content { flex: 1; min-width: 0; }
+
+  .email-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 3px;
+  }
+
+  .email-sender {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .email-item.unread .email-sender { color: var(--text); }
+  .email-item:not(.unread) .email-sender { color: var(--text-dim); }
+
+  .email-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dimmer);
+    flex-shrink: 0;
+  }
+
+  .email-subject {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .email-item.unread .email-subject { color: var(--text); }
+  .email-item:not(.unread) .email-subject { color: var(--text-dim); }
+
+  .email-preview {
+    font-size: 12px;
+    color: var(--text-dimmer);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ---- COMPOSE MODAL ---- */
+  .compose-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    backdrop-filter: blur(4px);
+  }
+
+  .compose-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .compose-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 560px;
+    max-width: 95vw;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+    transform: translateY(20px);
+    transition: transform 0.2s ease;
+    overflow: hidden;
+  }
+
+  .compose-overlay.open .compose-modal { transform: translateY(0); }
+
+  .compose-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .compose-modal-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .compose-close {
+    background: none; border: none;
+    color: var(--text-dim);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+  }
+
+  .compose-modal-body { padding: 20px; }
+
+  .compose-from {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  .compose-from-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dimmer);
+    flex-shrink: 0;
+  }
+
+  .compose-from-avatar {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .compose-from-address {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .compose-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .compose-field:focus { border-color: var(--accent); }
+  .compose-field::placeholder { color: var(--text-dimmer); }
+
+  .compose-body {
+    height: 120px;
+    resize: none;
+  }
+
+  .compose-send {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 4px;
+  }
+
+  .compose-send:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+  /* ---- SWITCH ANIMATION ---- */
+  .switching-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 20px;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .switching-overlay.flash { opacity: 0.6; }
+
+  .switching-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--text);
+    opacity: 0;
+    transition: opacity 0.1s ease;
+  }
+
+  .switching-overlay.flash .switching-text { opacity: 1; }
+
+  /* ---- BOTTOM LABEL ---- */
+  .demo-label {
+    text-align: center;
+    margin-top: 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dimmer);
+    letter-spacing: 1px;
+  }
+
+  .demo-label strong {
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eyebrow">Concept Demo</div>
+  <h1>One Inbox.<br><span>Many Identities.</span></h1>
+  <p>Switch between your personas instantly — like switching Facebook profiles. Same inbox, different you.</p>
+</div>
+
+<div class="app-wrapper">
+  <div class="app-shell" style="position:relative;">
+
+    <!-- Switching overlay -->
+    <div class="switching-overlay" id="switchOverlay">
+      <div class="switching-text" id="switchText">Switching...</div>
+    </div>
+
+    <!-- Title bar -->
+    <div class="titlebar">
+      <div class="titlebar-dots">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+      </div>
+      <div class="titlebar-url">personamail.app</div>
+      <div style="width:60px;"></div>
+    </div>
+
+    <div class="app-layout">
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-top">
+          <div class="sidebar-label">Your Personas</div>
+          <div class="persona-switcher" id="personaSwitcher"></div>
+          <button class="add-persona-btn" onclick="showAddPersona()">
+            <div class="add-icon">+</div>
+            <span>New Persona</span>
+          </button>
+        </div>
+
+        <div class="sidebar-nav">
+          <div class="nav-item active-nav"><span class="nav-icon">📥</span> Inbox <span class="nav-count" id="unreadCount">3</span></div>
+          <div class="nav-item"><span class="nav-icon">📤</span> Sent</div>
+          <div class="nav-item"><span class="nav-icon">⭐</span> Starred</div>
+          <div class="nav-item"><span class="nav-icon">📁</span> Archive</div>
+          <div class="nav-item"><span class="nav-icon">🗑</span> Trash</div>
+        </div>
+      </div>
+
+      <!-- Main -->
+      <div class="main-area">
+        <div class="persona-header" id="personaHeader">
+          <div class="persona-header-left">
+            <div class="persona-header-avatar" id="headerAvatar"></div>
+            <div>
+              <div class="persona-header-name" id="headerName"></div>
+              <div class="persona-header-address" id="headerAddress"></div>
+            </div>
+          </div>
+          <button class="compose-btn" id="composeBtn" onclick="openCompose()">
+            ✏️ Compose
+          </button>
+        </div>
+
+        <div class="email-list" id="emailList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="demo-label">Click any persona on the left to switch · <strong>Interactive Demo</strong></div>
+</div>
+
+<!-- Compose Modal -->
+<div class="compose-overlay" id="composeOverlay">
+  <div class="compose-modal">
+    <div class="compose-modal-header">
+      <div class="compose-modal-title">New Message</div>
+      <button class="compose-close" onclick="closeCompose()">×</button>
+    </div>
+    <div class="compose-modal-body">
+      <div class="compose-from">
+        <span class="compose-from-label">FROM</span>
+        <div class="compose-from-avatar" id="composeAvatar"></div>
+        <span class="compose-from-address" id="composeAddress"></span>
+      </div>
+      <input class="compose-field" placeholder="To" type="email">
+      <input class="compose-field" placeholder="Subject" type="text">
+      <textarea class="compose-field compose-body" placeholder="Write your message..."></textarea>
+      <button class="compose-send" id="composeSendBtn">Send as this Persona →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const personas = [
+  {
+    id: 'work',
+    name: 'Work',
+    email: 'alex@mycompany.com',
+    initial: 'W',
+    color: '#6c63ff',
+    rgb: '108,99,255',
+    emails: [
+      { sender: 'Sarah K.', avatar: 'SK', avatarColor: '#3b82f6', subject: 'Q3 Report Review', preview: 'Hi, can you take a look at the attached report before our meeting...', time: '9:41 AM', unread: true },
+      { sender: 'Rahul M.', avatar: 'RM', avatarColor: '#8b5cf6', subject: 'Design sprint kickoff', preview: 'We are starting the new sprint on Monday. Please confirm your availability...', time: '8:15 AM', unread: true },
+      { sender: 'Notion', avatar: 'N', avatarColor: '#1a1a1a', subject: 'Your weekly digest', preview: 'Here is what happened in your workspace this week...', time: 'Yesterday', unread: false },
+      { sender: 'HR Team', avatar: 'HR', avatarColor: '#059669', subject: 'Leave balance update', preview: 'Your annual leave balance has been updated. You have 12 days remaining...', time: 'Mon', unread: false },
+    ]
+  },
+  {
+    id: 'freelance',
+    name: 'Freelance',
+    email: 'alex.design@mycompany.com',
+    initial: 'F',
+    color: '#ff6584',
+    rgb: '255,101,132',
+    emails: [
+      { sender: 'Priya Sharma', avatar: 'PS', avatarColor: '#f59e0b', subject: 'Logo revision feedback', preview: 'Love the direction! Just a few tweaks on the color palette...', time: '11:20 AM', unread: true },
+      { sender: 'Fiverr', avatar: 'Fi', avatarColor: '#1dbf73', subject: 'New order received!', preview: 'Congratulations! You have received a new order from client_x99...', time: '10:05 AM', unread: false },
+      { sender: 'Carlos V.', avatar: 'CV', avatarColor: '#ef4444', subject: 'Website project - final invoice', preview: 'Please find the final invoice attached. Payment due within 7 days...', time: 'Yesterday', unread: false },
+    ]
+  },
+  {
+    id: 'personal',
+    name: 'Personal',
+    email: 'alex.personal@mycompany.com',
+    initial: 'P',
+    color: '#43e97b',
+    rgb: '67,233,123',
+    emails: [
+      { sender: 'Mom', avatar: 'M', avatarColor: '#ec4899', subject: 'Sunday dinner?', preview: 'Beta, are you coming home this Sunday? I am making your favourite...', time: '2:30 PM', unread: true },
+      { sender: 'Spotify', avatar: 'S', avatarColor: '#1db954', subject: 'Your Discover Weekly is ready', preview: 'Fresh music just for you. 30 songs curated based on your taste...', time: '9:00 AM', unread: false },
+      { sender: 'Swiggy', avatar: 'Sw', avatarColor: '#fc8019', subject: 'Order delivered!', preview: 'Your order from Barbeque Nation has been delivered. Enjoy your meal!', time: 'Yesterday', unread: false },
+    ]
+  }
+];
+
+let currentPersona = personas[0];
+
+function hexToRgb(hex) { return hex; }
+
+function renderPersonaSwitcher() {
+  const container = document.getElementById('personaSwitcher');
+  container.innerHTML = '';
+  personas.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'persona-btn' + (p.id === currentPersona.id ? ' active' : '');
+    btn.style.setProperty('--persona-color', p.color);
+    btn.style.setProperty('--persona-rgb', p.rgb);
+    const unread = p.emails.filter(e => e.unread).length;
+    btn.innerHTML = `
+      <div class="persona-avatar" style="background:${p.color};">${p.initial}</div>
+      <div class="persona-info">
+        <div class="persona-name">${p.name}</div>
+        <div class="persona-email">${p.email}</div>
+      </div>
+      ${unread > 0 ? `<div class="persona-badge" style="background:${p.color};">${unread}</div>` : ''}
+    `;
+    btn.onclick = () => switchPersona(p);
+    container.appendChild(btn);
+  });
+}
+
+function renderHeader() {
+  const p = currentPersona;
+  document.getElementById('headerAvatar').textContent = p.initial;
+  document.getElementById('headerAvatar').style.background = p.color;
+  document.getElementById('headerAvatar').style.boxShadow = `0 4px 20px rgba(${p.rgb},0.4)`;
+  document.getElementById('headerName').textContent = p.name + ' Identity';
+  document.getElementById('headerName').style.color = p.color;
+  document.getElementById('headerAddress').textContent = p.email;
+  document.getElementById('composeBtn').style.background = p.color;
+  document.getElementById('personaHeader').style.borderBottom = `1px solid rgba(${p.rgb},0.2)`;
+}
+
+function renderEmails() {
+  const list = document.getElementById('emailList');
+  list.innerHTML = '';
+  currentPersona.emails.forEach(email => {
+    const item = document.createElement('div');
+    item.className = 'email-item' + (email.unread ? ' unread' : '');
+    item.style.setProperty('--persona-dot', currentPersona.color);
+    item.innerHTML = `
+      <div class="email-sender-avatar" style="background:${email.avatarColor};">${email.avatar}</div>
+      <div class="email-content">
+        <div class="email-top">
+          <div class="email-sender">${email.sender}</div>
+          <div class="email-time">${email.time}</div>
+        </div>
+        <div class="email-subject">${email.subject}</div>
+        <div class="email-preview">${email.preview}</div>
+      </div>
+    `;
+    item.onclick = () => { email.unread = false; item.classList.remove('unread'); updateUnreadCount(); };
+    list.appendChild(item);
+  });
+}
+
+function updateUnreadCount() {
+  const total = personas.reduce((sum, p) => sum + p.emails.filter(e => e.unread).length, 0);
+  document.getElementById('unreadCount').textContent = total;
+}
+
+function switchPersona(p) {
+  if (p.id === currentPersona.id) return;
+  const overlay = document.getElementById('switchOverlay');
+  const switchText = document.getElementById('switchText');
+  switchText.textContent = `Switching to ${p.name}...`;
+  overlay.classList.add('flash');
+  setTimeout(() => {
+    currentPersona = p;
+    renderPersonaSwitcher();
+    renderHeader();
+    renderEmails();
+    overlay.classList.remove('flash');
+  }, 300);
+}
+
+function openCompose() {
+  const p = currentPersona;
+  document.getElementById('composeAvatar').textContent = p.initial;
+  document.getElementById('composeAvatar').style.background = p.color;
+  document.getElementById('composeAddress').textContent = p.email;
+  document.getElementById('composeSendBtn').style.background = p.color;
+  document.getElementById('composeOverlay').classList.add('open');
+}
+
+function closeCompose() {
+  document.getElementById('composeOverlay').classList.remove('open');
+}
+
+function showAddPersona() {
+  alert('In the real app, you would type a new persona name here and get a new address instantly — no new account needed.');
+}
+
+document.getElementById('composeOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeCompose();
+});
+
+// Init
+renderPersonaSwitcher();
+renderHeader();
+renderEmails();
+updateUnreadCount();
+</script>
+</body>
+</html>
