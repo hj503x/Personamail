@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PersonaMail — One Account. Separate Inboxes.</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Satoshi:wght@300;400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07070f;
+  --surface:#0e0e1c;
+  --surface2:#151526;
+  --surface3:#1c1c30;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.11);
+  --text:#ededff;
+  --text-dim:#7878a0;
+  --text-dimmer:#3a3a58;
+  --radius:14px;
+  --radius-sm:9px;
+  --p-color:#6c63ff;
+  --p-rgb:108,99,255;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Satoshi',sans-serif;min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ========== LANDING ========== */
+#landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;position:relative;overflow:hidden;}
+.bg-orbs{position:absolute;inset:0;pointer-events:none;}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orbFloat 8s ease infinite;}
+.orb1{width:500px;height:500px;background:rgba(108,99,255,0.12);top:-100px;left:-100px;animation-delay:0s;}
+.orb2{width:400px;height:400px;background:rgba(255,101,132,0.08);bottom:-80px;right:-80px;animation-delay:3s;}
+.orb3{width:300px;height:300px;background:rgba(67,233,123,0.06);top:40%;left:60%;animation-delay:6s;}
+@keyframes orbFloat{0%,100%{transform:translate(0,0);}50%{transform:translate(20px,-20px);}}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+
+.lc{position:relative;text-align:center;max-width:720px;z-index:1;}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:100px;padding:6px 18px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#9d97ff;letter-spacing:2px;margin-bottom:28px;animation:fadeUp .5s ease forwards;opacity:0;}
+.edot{width:6px;height:6px;border-radius:50%;background:#6c63ff;animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+
+h1{font-family:'Clash Display',sans-serif;font-size:clamp(44px,8vw,90px);font-weight:700;line-height:.92;letter-spacing:-2px;margin-bottom:22px;animation:fadeUp .5s ease forwards .1s;opacity:0;}
+.t1{display:block;color:var(--text);}
+.t2{display:block;background:linear-gradient(135deg,#6c63ff,#ff6584 45%,#43e97b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200%;animation:fadeUp .5s ease forwards .1s,gShift 5s ease infinite 1s;}
+@keyframes gShift{0%,100%{background-position:0%;}50%{background-position:100%;}}
+
+.subtitle{font-size:17px;color:var(--text-dim);line-height:1.75;font-weight:300;max-width:500px;margin:0 auto 44px;animation:fadeUp .5s ease forwards .2s;opacity:0;}
+.subtitle strong{color:var(--text);font-weight:500;}
+
+.ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;animation:fadeUp .5s ease forwards .3s;opacity:0;}
+.btn-p{padding:13px 30px;background:linear-gradient(135deg,#6c63ff,#5248d4);border:none;border-radius:100px;color:#fff;font-family:'Clash Display',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;box-shadow:0 8px 32px rgba(108,99,255,.3);}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(108,99,255,.45);}
+.btn-s{padding:13px 30px;background:transparent;border:1px solid var(--border2);border-radius:100px;color:var(--text-dim);font-family:'Satoshi',sans-serif;font-weight:500;font-size:14px;cursor:pointer;transition:all .2s;}
+.btn-s:hover{border-color:rgba(255,255,255,.25);color:var(--text);}
+
+.feature-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:64px;max-width:680px;animation:fadeUp .5s ease forwards .45s;opacity:0;}
+.fc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:left;transition:all .2s;}
+.fc:hover{border-color:var(--border2);transform:translateY(-2px);}
+.fc-icon{font-size:22px;margin-bottom:10px;}
+.fc-title{font-family:'Clash Display',sans-serif;font-weight:600;font-size:13px;margin-bottom:4px;}
+.fc-desc{font-size:11px;color:var(--text-dim);line-height:1.5;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* ========== APP ========== */
+#app{display:none;height:100vh;flex-direction:column;}
+#app.on{display:flex;}
+
+/* TOPBAR */
+.topbar{height:46px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;position:relative;}
+.tdots{display:flex;gap:6px;}
+.td{width:11px;height:11px;border-radius:50%;}
+.tdr{background:#ff5f57;}.tdy{background:#febc2e;}.tdg{background:#28c840;}
+.brand{display:flex;align-items:center;gap:8px;margin-left:8px;}
+.brand-logo{width:22px;height:22px;background:linear-gradient(135deg,#6c63ff,#ff6584);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.brand-name{font-family:'Clash Display',sans-serif;font-weight:600;font-size:14px;}
+.turl{position:absolute;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);white-space:nowrap;}
+.tactions{margin-left:auto;display:flex;gap:6px;}
+.tbtn{padding:4px 11px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:'Satoshi',sans-serif;font-size:11px;cursor:pointer;transition:all .15s;}
+.tbtn:hover{background:var(--surface2);color:var(--text);}
+
+/* LAYOUT */
+.app-body{display:grid;grid-template-columns:200px 280px 1fr;flex:1;overflow:hidden;}
+
+/* ========== SIDEBAR ========== */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sb-top{padding:14px 10px 8px;}
+.sb-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dimmer);padding:0 6px;margin-bottom:8px;}
+
+/* PERSONA CARDS */
+.p-list{display:flex;flex-direction:column;gap:3px;}
+.p-card{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.p-card::before{content:'';position:absolute;inset:0;background:rgba(var(--p-rgb),.06);opacity:0;transition:opacity .2s;}
+.p-card:hover::before{opacity:1;}
+.p-card.active{border-color:rgba(var(--p-rgb),.25);background:rgba(var(--p-rgb),.07);}
+.p-card.active::before{opacity:0;}
+.p-av{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;transition:all .2s;}
+.p-card.active .p-av{transform:scale(1.08);box-shadow:0 4px 14px rgba(var(--p-rgb),.5);}
+.p-info{flex:1;min-width:0;}
+.p-name{font-family:'Clash Display',sans-serif;font-weight:600;font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.p-addr{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dimmer);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.p-badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 6px;border-radius:100px;color:#fff;flex-shrink:0;min-width:18px;text-align:center;}
+
+.add-p{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--radius-sm);border:1px dashed var(--border2);cursor:pointer;color:var(--text-dimmer);font-size:11px;transition:all .2s;margin-top:5px;}
+.add-p:hover{border-color:#6c63ff;color:#9d97ff;}
+.add-av{width:32px;height:32px;border-radius:9px;border:1px dashed currentColor;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+
+/* SIDEBAR NAV — per persona */
+.sb-divider{height:1px;background:var(--border);margin:6px 10px;}
+.sb-nav{padding:6px 10px;flex:1;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--radius-sm);color:var(--text-dim);font-size:12px;cursor:pointer;transition:all .15s;margin-bottom:1px;position:relative;}
+.nav-item:hover{background:rgba(255,255,255,.03);color:var(--text);}
+.nav-item.nav-active{color:var(--text);}
+.nav-item.nav-active::before{content:'';position:absolute;left:0;top:20%;height:60%;width:2px;border-radius:1px;background:var(--p-color);}
+.ni{width:16px;text-align:center;font-size:12px;flex-shrink:0;}
+.nc{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 6px;border-radius:100px;color:#fff;}
+
+.sb-foot{padding:10px;border-top:1px solid var(--border);}
+.stor-bar{height:2px;background:var(--surface3);border-radius:1px;margin-bottom:5px;overflow:hidden;}
+.stor-fill{height:100%;border-radius:1px;transition:width .3s;}
+.stor-txt{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dimmer);}
+
+/* ========== EMAIL LIST PANEL ========== */
+.ep{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--surface);}
+
+/* Persona identity bar */
+.p-id-bar{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;transition:background .3s;}
+.pid-av{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:15px;color:#fff;transition:all .3s;flex-shrink:0;}
+.pid-info{flex:1;min-width:0;}
+.pid-name{font-family:'Clash Display',sans-serif;font-weight:700;font-size:13px;transition:color .3s;}
+.pid-addr{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pid-folder{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 9px;border-radius:100px;color:#fff;flex-shrink:0;}
+
+.ep-search{padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.ep-search input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 11px;color:var(--text);font-family:'Satoshi',sans-serif;font-size:12px;outline:none;transition:border-color .15s;}
+.ep-search input:focus{border-color:var(--border2);}
+.ep-search input::placeholder{color:var(--text-dimmer);}
+
+.ep-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 12px;flex-shrink:0;}
+.etab{padding:7px 12px 9px;font-size:11px;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-weight:500;}
+.etab:hover{color:var(--text);}
+.etab.et-active{color:var(--text);border-bottom-color:var(--p-color,#6c63ff);}
+
+.ep-actions{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end;flex-shrink:0;}
+.icon-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s;}
+.icon-btn:hover{background:var(--surface2);color:var(--text);}
+
+.email-list{flex:1;overflow-y:auto;}
+
+.eitem{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;position:relative;}
+.eitem:hover{background:rgba(255,255,255,.02);}
+.eitem.esel{background:rgba(var(--p-rgb),.06);}
+.eitem.esel::after{content:'';position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--p-color);}
+.eitem.eunread{background:rgba(255,255,255,.012);}
+.udot{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;}
+.sav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;margin-top:1px;}
+.emeta{flex:1;min-width:0;}
+.er1{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px;}
+.efrom{font-family:'Clash Display',sans-serif;font-weight:600;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+.eitem.eunread .efrom{color:var(--text);}
+.eitem:not(.eunread) .efrom{color:var(--text-dim);}
+.etime{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dimmer);flex-shrink:0;}
+.esubj{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.eitem.eunread .esubj{color:var(--text);}
+.eitem:not(.eunread) .esubj{color:var(--text-dim);}
+.eprev{font-size:10px;color:var(--text-dimmer);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.etags{display:flex;gap:4px;margin-top:3px;}
+.etag{font-family:'JetBrains Mono',monospace;font-size:8px;padding:1px 5px;border-radius:100px;border:1px solid var(--border2);color:var(--text-dimmer);}
+
+.ep-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-dimmer);}
+.ep-empty-icon{font-size:32px;opacity:.3;}
+.ep-empty-txt{font-family:'Clash Display',sans-serif;font-size:13px;}
+.ep-empty-sub{font-size:11px;}
+
+/* ========== EMAIL VIEW ========== */
+.ev{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+
+/* Persona context ribbon */
+.ev-ribbon{padding:8px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;transition:all .3s;}
+.evr-av{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:8px;color:#fff;}
+.evr-txt{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);}
+.evr-txt strong{color:var(--text);}
+.evr-sep{color:var(--text-dimmer);margin:0 2px;}
+
+.ev-header{padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.ev-subj{font-family:'Clash Display',sans-serif;font-size:19px;font-weight:600;margin-bottom:12px;line-height:1.2;}
+.ev-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.ev-from{display:flex;align-items:center;gap:10px;}
+.ev-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:12px;color:#fff;}
+.ev-sname{font-family:'Clash Display',sans-serif;font-weight:600;font-size:13px;}
+.ev-semail{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:1px;}
+.ev-to{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dimmer);margin-top:2px;}
+.ev-acts{display:flex;gap:6px;flex-wrap:wrap;}
+.ev-btn{padding:6px 13px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:'Satoshi',sans-serif;font-size:11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;}
+.ev-btn:hover{background:var(--surface2);color:var(--text);}
+.ev-btn.primary{color:#fff;border-color:transparent;}
+.ev-btn.primary:hover{filter:brightness(1.1);}
+
+.ev-body{flex:1;overflow-y:auto;padding:24px 22px;}
+.ev-body p{font-size:13px;line-height:1.85;color:var(--text-dim);margin-bottom:14px;font-weight:300;}
+.ev-body p.gr{color:var(--text);font-weight:400;}
+.ev-body p.sg{color:var(--text-dim);margin-top:20px;}
+
+.ev-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-dimmer);}
+.ev-ei{font-size:44px;opacity:.2;}
+.ev-et{font-family:'Clash Display',sans-serif;font-size:15px;}
+.ev-es{font-size:12px;}
+
+/* REPLY BOX */
+.reply-box{border-top:1px solid var(--border);padding:14px 22px;flex-shrink:0;}
+.reply-from{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:9px;}
+.rf-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-dimmer);letter-spacing:1px;flex-shrink:0;}
+.rf-av{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:8px;color:#fff;flex-shrink:0;}
+.rf-addr{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text);}
+.rf-persona{font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 7px;border-radius:100px;color:#fff;margin-left:auto;}
+.reply-ta{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 13px;color:var(--text);font-family:'Satoshi',sans-serif;font-size:12px;font-weight:300;resize:none;outline:none;height:72px;margin-bottom:9px;transition:border-color .15s;}
+.reply-ta:focus{border-color:var(--border2);}
+.reply-ta::placeholder{color:var(--text-dimmer);}
+.reply-foot{display:flex;align-items:center;justify-content:space-between;}
+.reply-tools{display:flex;gap:5px;}
+.send-btn{padding:7px 18px;border-radius:var(--radius-sm);border:none;font-family:'Clash Display',sans-serif;font-weight:600;font-size:12px;color:#fff;cursor:pointer;transition:all .2s;}
+.send-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+
+/* ========== COMPOSE MODAL ========== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;width:560px;max-width:95vw;box-shadow:0 40px 100px rgba(0,0,0,.8);transform:translateY(16px) scale(.98);transition:transform .25s ease;overflow:hidden;}
+.overlay.open .modal{transform:translateY(0) scale(1);}
+.mh{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.mh-title{font-family:'Clash Display',sans-serif;font-weight:600;font-size:15px;}
+.mclose{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;}
+.mclose:hover{background:var(--surface2);color:var(--text);}
+.mb{padding:18px;}
+.cfrom{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;}
+.cf-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-dimmer);letter-spacing:1px;}
+.cf-av{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:9px;color:#fff;flex-shrink:0;}
+.cf-addr{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);flex:1;}
+.cf-badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 8px;border-radius:100px;color:#fff;}
+.cfield{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 13px;color:var(--text);font-family:'Satoshi',sans-serif;font-size:12px;outline:none;transition:border-color .15s;margin-bottom:9px;}
+.cfield:focus{border-color:var(--border2);}
+.cfield::placeholder{color:var(--text-dimmer);}
+.cbody{height:120px;resize:none;}
+.cfoot{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+.ctools{display:flex;gap:5px;}
+.csend{padding:8px 22px;border-radius:var(--radius-sm);border:none;font-family:'Clash Display',sans-serif;font-weight:600;font-size:13px;color:#fff;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.csend:hover{filter:brightness(1.1);transform:translateY(-1px);}
+
+/* ========== ADD PERSONA MODAL ========== */
+.ap-modal{width:400px;}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;}
+.type-card{padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;text-align:center;}
+.type-card:hover{border-color:var(--border2);}
+.type-card.tsel{border-color:#6c63ff;background:rgba(108,99,255,.08);}
+.tc-icon{font-size:20px;margin-bottom:5px;}
+.tc-name{font-family:'Clash Display',sans-serif;font-weight:600;font-size:11px;}
+.tc-desc{font-size:10px;color:var(--text-dim);margin-top:2px;}
+.cpick{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
+.cdot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.cdot.csel{border-color:#fff;transform:scale(1.2);}
+.full-btn{width:100%;padding:10px;border-radius:var(--radius-sm);border:none;font-family:'Clash Display',sans-serif;font-weight:600;font-size:13px;color:#fff;cursor:pointer;transition:all .2s;margin-top:4px;}
+.full-btn:hover{filter:brightness(1.1);}
+
+/* ========== SWITCH OVERLAY ========== */
+.sw-overlay{position:absolute;inset:0;background:var(--bg);opacity:0;pointer-events:none;z-index:50;transition:opacity .15s;display:flex;align-items:center;justify-content:center;}
+.sw-overlay.son{opacity:.9;pointer-events:all;}
+.sw-box{text-align:center;transform:scale(.9);transition:transform .15s;}
+.sw-overlay.son .sw-box{transform:scale(1);}
+.sw-av{width:52px;height:52px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:20px;color:#fff;margin:0 auto 10px;}
+.sw-name{font-family:'Clash Display',sans-serif;font-weight:700;font-size:16px;}
+.sw-addr{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:3px;}
+.sw-folders{display:flex;gap:6px;justify-content:center;margin-top:10px;}
+.sw-folder{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 8px;border-radius:100px;background:var(--surface2);border:1px solid var(--border2);color:var(--text-dim);}
+
+/* ========== SETTINGS ========== */
+.settings{position:fixed;top:0;right:0;width:300px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:500;transform:translateX(100%);transition:transform .3s ease;display:flex;flex-direction:column;}
+.settings.sopen{transform:translateX(0);}
+.sh{padding:18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sh-title{font-family:'Clash Display',sans-serif;font-weight:600;font-size:15px;}
+.sb2{padding:18px;flex:1;overflow-y:auto;}
+.sg{margin-bottom:24px;}
+.sg-title{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dimmer);margin-bottom:10px;}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.sr-lbl{font-size:12px;color:var(--text-dim);}
+.tog{width:34px;height:18px;border-radius:100px;background:var(--surface3);border:1px solid var(--border2);cursor:pointer;position:relative;transition:background .2s;}
+.tog.ton{background:#6c63ff;border-color:#6c63ff;}
+.tog-t{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.tog.ton .tog-t{transform:translateX(16px);}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:11px 16px;display:flex;align-items:center;gap:9px;box-shadow:0 16px 48px rgba(0,0,0,.5);transform:translateY(70px);opacity:0;transition:all .3s ease;z-index:2000;max-width:300px;}
+.toast.tshow{transform:translateY(0);opacity:1;}
+.ti{font-size:15px;flex-shrink:0;}
+.tt{flex:1;}
+.tt-title{font-family:'Clash Display',sans-serif;font-weight:600;font-size:12px;}
+.tt-sub{font-size:10px;color:var(--text-dim);margin-top:1px;}
+</style>
+</head>
+<body>
+
+<!-- ========== LANDING ========== -->
+<div id="landing">
+  <div class="bg-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+  <div class="grid"></div>
+  <div class="lc">
+    <div class="eyebrow"><div class="edot"></div>Interactive Concept Demo</div>
+    <h1>
+      <span class="t1">One Account.</span>
+      <span class="t2">Separate Inboxes.</span>
+    </h1>
+    <p class="subtitle">
+      Stop creating new email accounts for every new thing you do online.<br>
+      <strong>One login. Multiple personas. Each with its own inbox.</strong>
+    </p>
+    <div class="ctas">
+      <button class="btn-p" onclick="launchApp()">✦ Try the Demo</button>
+      <button class="btn-s" onclick="launchApp()">See How It Works →</button>
+    </div>
+    <div class="feature-cards">
+      <div class="fc">
+        <div class="fc-icon">🔀</div>
+        <div class="fc-title">Switch Personas</div>
+        <div class="fc-desc">Tap to switch between identities like Facebook profiles</div>
+      </div>
+      <div class="fc">
+        <div class="fc-icon">📬</div>
+        <div class="fc-title">Separate Inboxes</div>
+        <div class="fc-desc">Each persona has its own inbox, sent, drafts & storage</div>
+      </div>
+      <div class="fc">
+        <div class="fc-icon">🔑</div>
+        <div class="fc-title">One Login</div>
+        <div class="fc-desc">No more managing 5 accounts and 5 passwords</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== APP ========== -->
+<div id="app">
+  <div class="sw-overlay" id="swOverlay">
+    <div class="sw-box">
+      <div class="sw-av" id="swAv"></div>
+      <div class="sw-name" id="swName"></div>
+      <div class="sw-addr" id="swAddr"></div>
+      <div class="sw-folders">
+        <div class="sw-folder">📥 Inbox</div>
+        <div class="sw-folder">📤 Sent</div>
+        <div class="sw-folder">📝 Drafts</div>
+        <div class="sw-folder">⭐ Starred</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tdots"><div class="td tdr"></div><div class="td tdy"></div><div class="td tdg"></div></div>
+    <div class="brand">
+      <div class="brand-logo">✉</div>
+      <div class="brand-name">PersonaMail</div>
+    </div>
+    <div class="turl">personamail.app — concept demo</div>
+    <div class="tactions">
+      <button class="tbtn" onclick="openSettings()">⚙ Settings</button>
+      <button class="tbtn" onclick="backToLanding()">← Home</button>
+    </div>
+  </div>
+
+  <div class="app-body" style="position:relative;">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-top">
+        <div class="sb-lbl">Your Personas</div>
+        <div class="p-list" id="pList"></div>
+        <div class="add-p" onclick="openAddPersona()">
+          <div class="add-av">+</div>
+          <span>New Persona</span>
+        </div>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-nav" id="sbNav"></div>
+      <div class="sb-foot">
+        <div class="stor-bar"><div class="stor-fill" id="storFill"></div></div>
+        <div class="stor-txt" id="storTxt"></div>
+      </div>
+    </div>
+
+    <!-- Email list panel -->
+    <div class="ep">
+      <div class="p-id-bar" id="pidBar">
+        <div class="pid-av" id="pidAv"></div>
+        <div class="pid-info">
+          <div class="pid-name" id="pidName"></div>
+          <div class="pid-addr" id="pidAddr"></div>
+        </div>
+        <div class="pid-folder" id="pidFolder"></div>
+      </div>
+      <div class="ep-search"><input placeholder="🔍  Search this inbox..." oninput="filterEmails(this.value)" id="searchInput"></div>
+      <div class="ep-tabs" id="epTabs">
+        <div class="etab et-active" onclick="setSubTab('all',this)">All Mail</div>
+        <div class="etab" onclick="setSubTab('unread',this)">Unread</div>
+        <div class="etab" onclick="setSubTab('starred',this)">Starred</div>
+      </div>
+      <div class="ep-actions">
+        <button class="icon-btn" title="Mark all read" onclick="markAllRead()">✓</button>
+        <button class="icon-btn" title="Refresh" onclick="showToast('🔄','Refreshed','Inbox is up to date')">↻</button>
+        <button class="icon-btn" title="Compose" onclick="openCompose()">✏</button>
+      </div>
+      <div class="email-list" id="emailList"></div>
+    </div>
+
+    <!-- Email view -->
+    <div class="ev" id="ev">
+      <div class="ev-empty" id="evEmpty">
+        <div class="ev-ei">✉️</div>
+        <div class="ev-et">Select an email to read</div>
+        <div class="ev-es">or compose a new message</div>
+      </div>
+      <div id="evContent" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+        <div class="ev-ribbon" id="evRibbon">
+          <div class="evr-av" id="evrAv"></div>
+          <div class="evr-txt" id="evrTxt"></div>
+        </div>
+        <div class="ev-header">
+          <div class="ev-subj" id="evSubj"></div>
+          <div class="ev-meta">
+            <div class="ev-from">
+              <div class="ev-av" id="evAv"></div>
+              <div>
+                <div class="ev-sname" id="evSname"></div>
+                <div class="ev-semail" id="evSemail"></div>
+                <div class="ev-to" id="evTo"></div>
+              </div>
+            </div>
+            <div class="ev-acts">
+              <button class="ev-btn" onclick="toggleStar()">⭐ Star</button>
+              <button class="ev-btn" onclick="showToast('📁','Archived','Email moved to archive')">📁</button>
+              <button class="ev-btn" onclick="showToast('🗑','Deleted','Email moved to trash')">🗑</button>
+              <button class="ev-btn primary" id="replyBtn" onclick="focusReply()">↩ Reply</button>
+            </div>
+          </div>
+        </div>
+        <div class="ev-body" id="evBody"></div>
+        <div class="reply-box">
+          <div class="reply-from">
+            <span class="rf-lbl">REPLYING AS</span>
+            <div class="rf-av" id="rfAv"></div>
+            <span class="rf-addr" id="rfAddr"></span>
+            <div class="rf-persona" id="rfPersona"></div>
+          </div>
+          <textarea class="reply-ta" id="replyTa" placeholder="Write your reply..."></textarea>
+          <div class="reply-foot">
+            <div class="reply-tools">
+              <button class="icon-btn">📎</button>
+              <button class="icon-btn">Aa</button>
+              <button class="icon-btn">😊</button>
+            </div>
+            <button class="send-btn" id="replySendBtn" onclick="sendReply()">Send Reply →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- COMPOSE -->
+<div class="overlay" id="compOverlay">
+  <div class="modal">
+    <div class="mh">
+      <div class="mh-title">✏ New Message</div>
+      <button class="mclose" onclick="closeCompose()">×</button>
+    </div>
+    <div class="mb">
+      <div class="cfrom">
+        <span class="cf-lbl">FROM</span>
+        <div class="cf-av" id="cfAv"></div>
+        <span class="cf-addr" id="cfAddr"></span>
+        <span class="cf-badge" id="cfBadge"></span>
+      </div>
+      <input class="cfield" id="cTo" placeholder="To" type="email">
+      <input class="cfield" id="cSubj" placeholder="Subject">
+      <textarea class="cfield cbody" id="cBody" placeholder="Write your message..."></textarea>
+      <div class="cfoot">
+        <div class="ctools">
+          <button class="icon-btn">📎</button>
+          <button class="icon-btn">Aa</button>
+          <button class="icon-btn">😊</button>
+        </div>
+        <button class="csend" id="csendBtn" onclick="sendEmail()">Send ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PERSONA -->
+<div class="overlay" id="apOverlay">
+  <div class="modal ap-modal">
+    <div class="mh">
+      <div class="mh-title">✦ New Persona</div>
+      <button class="mclose" onclick="closeAddPersona()">×</button>
+    </div>
+    <div class="mb">
+      <div class="sb-lbl" style="margin-bottom:8px;">Type</div>
+      <div class="type-grid" id="typeGrid"></div>
+      <div class="sb-lbl" style="margin-bottom:8px;">Persona Name</div>
+      <input class="cfield" id="apName" placeholder="e.g. My Startup">
+      <div class="sb-lbl" style="margin-bottom:8px;">Email Address</div>
+      <input class="cfield" id="apEmail" placeholder="e.g. startup@personamail.app">
+      <div class="sb-lbl" style="margin-bottom:8px;">Color</div>
+      <div class="cpick" id="cpick"></div>
+      <button class="full-btn" id="apBtn" onclick="createPersona()">Create Persona ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings" id="settingsPanel">
+  <div class="sh"><div class="sh-title">⚙ Settings</div><button class="mclose" onclick="closeSettings()">×</button></div>
+  <div class="sb2">
+    <div class="sg">
+      <div class="sg-title">General</div>
+      <div class="sr"><span class="sr-lbl">Dark mode</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+      <div class="sr"><span class="sr-lbl">Notifications</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+      <div class="sr"><span class="sr-lbl">Keyboard shortcuts</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+    </div>
+    <div class="sg">
+      <div class="sg-title">Per-Persona Settings</div>
+      <div class="sr"><span class="sr-lbl">Separate sent folders</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+      <div class="sr"><span class="sr-lbl">Separate draft folders</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+      <div class="sr"><span class="sr-lbl">Persona-specific signatures</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+      <div class="sr"><span class="sr-lbl">Auto-select persona on reply</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+      <div class="sr"><span class="sr-lbl">Separate storage per persona</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+    </div>
+    <div class="sg">
+      <div class="sg-title">Privacy</div>
+      <div class="sr"><span class="sr-lbl">Email tracking protection</span><div class="tog ton" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+      <div class="sr"><span class="sr-lbl">Read receipts</span><div class="tog" onclick="this.classList.toggle('ton')"><div class="tog-t"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="ti" id="ti"></div>
+  <div class="tt"><div class="tt-title" id="ttTitle"></div><div class="tt-sub" id="ttSub"></div></div>
+</div>
+
+<script>
+// ========== DATA ==========
+const folders = ['inbox','sent','drafts','starred','archive','spam','trash'];
+const folderIcons = {inbox:'📥',sent:'📤',drafts:'📝',starred:'⭐',archive:'📁',spam:'⚠️',trash:'🗑'};
+const folderLabels = {inbox:'Inbox',sent:'Sent',drafts:'Drafts',starred:'Starred',archive:'Archive',spam:'Spam',trash:'Trash'};
+
+let personas = [
+  {
+    id:'work', name:'Work', initial:'W', email:'alex@mycompany.com',
+    color:'#6c63ff', rgb:'108,99,255', storage:'2.1 GB', storPct:21,
+    folders:{
+      inbox:[
+        {id:1,sender:'Sarah Kim',se:'sarah@techcorp.com',av:'SK',ac:'#3b82f6',subj:'Q3 Report — needs your sign-off',prev:'Hi Alex, the Q3 report is ready for final review...',body:`<p class="gr">Hi Alex,</p><p>The Q3 report is finalized and ready for your sign-off. We've hit all our targets this quarter — revenue up 23%, user acquisition ahead of schedule.</p><p>I need your approval before EOD so we can share with the board tomorrow morning. The document is attached.</p><p class="sg">Best,<br>Sarah</p>`,time:'9:41 AM',unread:true,starred:false,tag:'Report'},
+        {id:2,sender:'Rahul Mehta',se:'rahul@mycompany.com',av:'RM',ac:'#8b5cf6',subj:'Design sprint kickoff — Monday 10am',prev:'Confirming the design sprint starts Monday. Please block your calendar.',body:`<p class="gr">Hey Alex,</p><p>Just confirming — the new product design sprint kicks off Monday at 10am. We have 5 days blocked for this. Please make sure your calendar is clear.</p><p>I've sent the sprint brief separately — please read it before Monday.</p><p class="sg">Cheers,<br>Rahul</p>`,time:'8:15 AM',unread:true,starred:false,tag:'Meeting'},
+        {id:3,sender:'Notion',se:'notify@notion.so',av:'N',ac:'#1a1a2e',subj:'Your workspace weekly digest',prev:'Here is what happened in your workspace this week across 4 pages.',body:`<p class="gr">Weekly Digest</p><p>4 pages updated · 2 new databases · 12 tasks completed · 3 new comments</p><p>Top pages: Product Roadmap, Sprint Board, Team Handbook.</p><p class="sg">— Notion</p>`,time:'Yesterday',unread:false,starred:false,tag:'Digest'},
+      ],
+      sent:[
+        {id:101,sender:'To: Sarah Kim',se:'sarah@techcorp.com',av:'SK',ac:'#3b82f6',subj:'Re: Q3 Report Review',prev:'Hi Sarah, I\'ve reviewed the report and it looks great...',body:`<p class="gr">Hi Sarah,</p><p>I've reviewed the report — looks great. Approved. Please share with the board.</p><p class="sg">Alex</p>`,time:'10:00 AM',unread:false,starred:false,tag:'Sent'},
+        {id:102,sender:'To: HR Team',se:'hr@mycompany.com',av:'HR',ac:'#059669',subj:'Leave Request — Dec 20-27',prev:'Hi, I\'d like to request leave from December 20th...',body:`<p class="gr">Hi HR Team,</p><p>I'd like to request annual leave from December 20th to 27th. I have 12 days remaining.</p><p class="sg">Alex</p>`,time:'Monday',unread:false,starred:false,tag:'Sent'},
+      ],
+      drafts:[
+        {id:201,sender:'Draft',se:'',av:'D',ac:'#44445a',subj:'Proposal: New feature roadmap for Q4',prev:'Draft saved — not sent yet.',body:`<p class="gr">[Draft]</p><p>This is a draft email about the Q4 feature roadmap. Not yet sent.</p>`,time:'Today',unread:false,starred:false,tag:'Draft'},
+      ],
+      starred:[
+        {id:1,sender:'Sarah Kim',se:'sarah@techcorp.com',av:'SK',ac:'#3b82f6',subj:'Q3 Report — needs your sign-off',prev:'Hi Alex, the Q3 report is ready...',body:``,time:'9:41 AM',unread:false,starred:true,tag:'Report'},
+      ],
+      archive:[],spam:[],trash:[],
+    }
+  },
+  {
+    id:'freelance', name:'Freelance', initial:'F', email:'alex.design@studio.com',
+    color:'#ff6584', rgb:'255,101,132', storage:'890 MB', storPct:9,
+    folders:{
+      inbox:[
+        {id:4,sender:'Priya Sharma',se:'priya@startupxyz.in',av:'PS',ac:'#f59e0b',subj:'Logo revision — love the direction!',prev:'The new logo is almost perfect. Just a few tweaks...',body:`<p class="gr">Hi Alex!</p><p>I absolutely love the new logo direction. The typography is exactly what we were looking for.</p><p>Just two small tweaks: 1. The blue feels too corporate, can we try warmer? 2. Can we see the icon on the right side?</p><p class="sg">Thanks,<br>Priya</p>`,time:'11:20 AM',unread:true,starred:false,tag:'Client'},
+        {id:5,sender:'Fiverr',se:'noreply@fiverr.com',av:'Fi',ac:'#1dbf73',subj:'🎉 New order from client_x99!',prev:'Congratulations! You have received a new order. Check your dashboard.',body:`<p class="gr">Congratulations!</p><p>New order: Brand identity package · Client: client_x99 · Delivery: 5 days · Value: $450</p><p>Log in to review the brief.</p><p class="sg">— Fiverr</p>`,time:'10:05 AM',unread:false,starred:false,tag:'Platform'},
+      ],
+      sent:[
+        {id:103,sender:'To: Priya Sharma',se:'priya@startupxyz.in',av:'PS',ac:'#f59e0b',subj:'Re: Logo revision',prev:'Hi Priya, thanks for the feedback! Working on the revisions now...',body:`<p class="gr">Hi Priya,</p><p>Thanks for the kind words! I'll work on the warmer color palette and the alternate icon placement. Will send over revisions by tomorrow.</p><p class="sg">Alex</p>`,time:'11:45 AM',unread:false,starred:false,tag:'Sent'},
+      ],
+      drafts:[
+        {id:202,sender:'Draft',se:'',av:'D',ac:'#44445a',subj:'Invoice #2024-019 — Priya Sharma',prev:'Draft invoice — not sent.',body:`<p class="gr">[Draft Invoice]</p><p>Invoice for logo design project. Total: $800. Not yet sent.</p>`,time:'Today',unread:false,starred:false,tag:'Draft'},
+      ],
+      starred:[],archive:[],spam:[],trash:[],
+    }
+  },
+  {
+    id:'personal', name:'Personal', initial:'P', email:'alex.personal@gmail.com',
+    color:'#43e97b', rgb:'67,233,123', storage:'4.2 GB', storPct:42,
+    folders:{
+      inbox:[
+        {id:6,sender:'Mom 💜',se:'mom@family.com',av:'M',ac:'#ec4899',subj:'Sunday dinner — are you coming?',prev:'Beta, I am making your favourite. Please come home this Sunday!',body:`<p class="gr">Beta,</p><p>Are you coming home this Sunday? I am making aloo paratha and dal makhani — your favourite. Papa is also asking about you.</p><p>It has been 3 weeks since we saw you. We miss you a lot. Please try to come.</p><p>Call me when you get this.</p><p class="sg">Love,<br>Mom 💜</p>`,time:'2:30 PM',unread:true,starred:true,tag:'Family'},
+        {id:7,sender:'Spotify',se:'no-reply@spotify.com',av:'S',ac:'#1db954',subj:'Your Discover Weekly is ready 🎵',prev:'Fresh music just for you. 30 songs curated based on what you love.',body:`<p class="gr">Hi Alex,</p><p>Your Discover Weekly is ready — 30 fresh tracks picked just for you. Listen before next Monday!</p><p class="sg">— Spotify</p>`,time:'9:00 AM',unread:false,starred:false,tag:'Music'},
+        {id:8,sender:'Swiggy',se:'orders@swiggy.in',av:'Sw',ac:'#fc8019',subj:'Order delivered! 🍔',prev:'Your order from Barbeque Nation has arrived.',body:`<p class="gr">Order Delivered! 🎉</p><p>Order #SWG-88291 from Barbeque Nation<br>Paneer Tikka ×2 · Dal Makhani ×1 · Naan ×4<br>Total: ₹842</p><p class="sg">— Swiggy</p>`,time:'Yesterday',unread:false,starred:false,tag:'Food'},
+      ],
+      sent:[],
+      drafts:[],
+      starred:[
+        {id:6,sender:'Mom 💜',se:'mom@family.com',av:'M',ac:'#ec4899',subj:'Sunday dinner — are you coming?',prev:'Beta, I am making your favourite...',body:``,time:'2:30 PM',unread:false,starred:true,tag:'Family'},
+      ],
+      archive:[],spam:[],trash:[],
+    }
+  },
+  {
+    id:'business', name:'Business', initial:'B', email:'hello@mybusiness.com',
+    color:'#f59e0b', rgb:'245,158,11', storage:'1.3 GB', storPct:13,
+    folders:{
+      inbox:[
+        {id:9,sender:'Stripe',se:'support@stripe.com',av:'St',ac:'#635bff',subj:'Payment of ₹12,400 received',prev:'A payment has been received in your Stripe account.',body:`<p class="gr">Payment Received ✓</p><p>Amount: ₹12,400 · Customer: Rajesh Enterprises · Transaction: txn_3QK2...</p><p>Funds available in 2 business days.</p><p class="sg">— Stripe</p>`,time:'1:15 PM',unread:true,starred:false,tag:'Payment'},
+        {id:10,sender:'Google Ads',se:'googleads@google.com',av:'G',ac:'#4285f4',subj:'Your campaign is performing well',prev:'Your "Summer Sale" campaign has 340 clicks this week.',body:`<p class="gr">Campaign Update</p><p>Summer Sale 2024: 340 clicks (+18%) · 12,400 impressions · CTR 2.7% · Spend ₹4,200</p><p>Top keyword: "affordable design services"</p><p class="sg">— Google Ads</p>`,time:'Yesterday',unread:false,starred:false,tag:'Ads'},
+      ],
+      sent:[],drafts:[],starred:[],archive:[],spam:[],trash:[],
+    }
+  }
+];
+
+let currentPersona = personas[0];
+let currentFolder = 'inbox';
+let currentSubTab = 'all';
+let selectedEmail = null;
+let newPersonaColor = '#6c63ff';
+let selectedType = 0;
+
+const pTypes = [
+  {icon:'💼',name:'Work',desc:'Professional identity'},
+  {icon:'🎨',name:'Freelance',desc:'Client-facing work'},
+  {icon:'🏠',name:'Personal',desc:'Friends & family'},
+  {icon:'🚀',name:'Business',desc:'Your own venture'},
+];
+const colors = ['#6c63ff','#ff6584','#43e97b','#f59e0b','#06b6d4','#ec4899','#8b5cf6','#ef4444'];
+
+// ========== LANDING ==========
+function launchApp(){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('app').classList.add('on');
+  renderAll();
+}
+function backToLanding(){
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('landing').style.display='flex';
+}
+
+// ========== RENDER ALL ==========
+function renderAll(){
+  renderPersonaList();
+  renderSidebarNav();
+  renderPidBar();
+  renderEmailList();
+  updateTotalUnread();
+}
+
+function renderPersonaList(){
+  const list = document.getElementById('pList');
+  list.innerHTML='';
+  personas.forEach(p=>{
+    const unread = getTotalUnread(p);
+    const d = document.createElement('div');
+    d.className='p-card'+(p.id===currentPersona.id?' active':'');
+    d.style.setProperty('--p-rgb',p.rgb);
+    d.style.setProperty('--p-color',p.color);
+    d.innerHTML=`
+      <div class="p-av" style="background:${p.color};">${p.initial}</div>
+      <div class="p-info">
+        <div class="p-name">${p.name}</div>
+        <div class="p-addr">${p.email}</div>
+      </div>
+      ${unread>0?`<div class="p-badge" style="background:${p.color};">${unread}</div>`:''}
+    `;
+    d.onclick=()=>switchPersona(p);
+    list.appendChild(d);
+  });
+}
+
+function getTotalUnread(p){
+  return Object.values(p.folders).flat().filter(e=>e.unread).length;
+}
+
+function renderSidebarNav(){
+  const nav = document.getElementById('sbNav');
+  nav.innerHTML=`<div class="sb-lbl">Folders</div>`;
+  folders.forEach(f=>{
+    const emails = currentPersona.folders[f]||[];
+    const unread = emails.filter(e=>e.unread).length;
+    const d = document.createElement('div');
+    d.className='nav-item'+(f===currentFolder?' nav-active':'');
+    d.style.setProperty('--p-color',currentPersona.color);
+    d.innerHTML=`
+      <span class="ni">${folderIcons[f]}</span>
+      ${folderLabels[f]}
+      ${unread>0?`<span class="nc" style="background:${currentPersona.color};">${unread}</span>`:''}
+      ${emails.length>0&&unread===0?`<span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dimmer);">${emails.length}</span>`:''}
+    `;
+    d.onclick=()=>setFolder(f);
+    nav.appendChild(d);
+  });
+
+  // Storage
+  document.getElementById('storFill').style.width=currentPersona.storPct+'%';
+  document.getElementById('storFill').style.background=`linear-gradient(90deg,${currentPersona.color},${currentPersona.color}99)`;
+  document.getElementById('storTxt').textContent=currentPersona.storage+' used';
+}
+
+function renderPidBar(){
+  const p = currentPersona;
+  const f = currentFolder;
+  document.getElementById('pidAv').textContent=p.initial;
+  document.getElementById('pidAv').style.background=p.color;
+  document.getElementById('pidAv').style.boxShadow=`0 4px 14px rgba(${p.rgb},.4)`;
+  document.getElementById('pidName').textContent=p.name+' — '+folderLabels[f];
+  document.getElementById('pidName').style.color=p.color;
+  document.getElementById('pidAddr').textContent=p.email;
+  document.getElementById('pidFolder').textContent=folderIcons[f]+' '+folderLabels[f];
+  document.getElementById('pidFolder').style.background=p.color;
+
+  // Tabs color
+  document.querySelectorAll('.etab.et-active').forEach(t=>t.style.borderBottomColor=p.color);
+}
+
+function renderEmailList(filter=''){
+  const list = document.getElementById('emailList');
+  let emails = (currentPersona.folders[currentFolder]||[]).filter((e,i,a)=>a.findIndex(x=>x.id===e.id)===i);
+
+  if(currentSubTab==='unread') emails=emails.filter(e=>e.unread);
+  if(currentSubTab==='starred') emails=emails.filter(e=>e.starred);
+  if(filter) emails=emails.filter(e=>
+    e.sender.toLowerCase().includes(filter.toLowerCase())||
+    e.subj.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  if(emails.length===0){
+    list.innerHTML=`
+      <div class="ep-empty">
+        <div class="ep-empty-icon">${folderIcons[currentFolder]}</div>
+        <div class="ep-empty-txt">No emails here</div>
+        <div class="ep-empty-sub">${folderLabels[currentFolder]} is empty for ${currentPersona.name}</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML='';
+  emails.forEach(email=>{
+    const d = document.createElement('div');
+    d.className='eitem'+(email.unread?' eunread':'')+(selectedEmail&&selectedEmail.id===email.id?' esel':'');
+    d.style.setProperty('--p-rgb',currentPersona.rgb);
+    d.style.setProperty('--p-color',currentPersona.color);
+    d.innerHTML=`
+      ${email.unread?`<div class="udot" style="background:${currentPersona.color};"></div>`:''}
+      <div class="sav" style="background:${email.ac};">${email.av}</div>
+      <div class="emeta">
+        <div class="er1">
+          <div class="efrom">${email.starred?'⭐ ':''} ${email.sender}</div>
+          <div class="etime">${email.time}</div>
+        </div>
+        <div class="esubj">${email.subj}</div>
+        <div class="eprev">${email.prev}</div>
+        <div class="etags"><span class="etag">${email.tag}</span></div>
+      </div>
+    `;
+    d.onclick=()=>openEmail(email);
+    list.appendChild(d);
+  });
+}
+
+function updateTotalUnread(){
+  const total = personas.reduce((s,p)=>s+getTotalUnread(p),0);
+  document.getElementById('sbNav').querySelector('.nc') || null;
+  // Update persona list badges
+  renderPersonaList();
+}
+
+// ========== SWITCH PERSONA ==========
+function switchPersona(p){
+  if(p.id===currentPersona.id) return;
+  const ov=document.getElementById('swOverlay');
+  document.getElementById('swAv').textContent=p.initial;
+  document.getElementById('swAv').style.background=p.color;
+  document.getElementById('swAv').style.boxShadow=`0 8px 28px rgba(${p.rgb},.5)`;
+  document.getElementById('swName').textContent='Switching to '+p.name;
+  document.getElementById('swAddr').textContent=p.email;
+  ov.classList.add('son');
+  setTimeout(()=>{
+    currentPersona=p;
+    currentFolder='inbox';
+    selectedEmail=null;
+    document.getElementById('evEmpty').style.display='flex';
+    document.getElementById('evContent').style.display='none';
+    document.getElementById('searchInput').value='';
+    currentSubTab='all';
+    document.querySelectorAll('.etab').forEach((t,i)=>t.classList.toggle('et-active',i===0));
+    renderAll();
+    ov.classList.remove('son');
+    showToast('✦','Switched to '+p.name,p.email+' · Inbox loaded');
+  },700);
+}
+
+// ========== FOLDER ==========
+function setFolder(f){
+  currentFolder=f;
+  selectedEmail=null;
+  document.getElementById('evEmpty').style.display='flex';
+  document.getElementById('evContent').style.display='none';
+  document.getElementById('searchInput').value='';
+  renderSidebarNav();
+  renderPidBar();
+  renderEmailList();
+}
+
+// ========== EMAIL VIEW ==========
+function openEmail(email){
+  email.unread=false;
+  selectedEmail=email;
+  renderEmailList();
+  updateTotalUnread();
+  renderSidebarNav();
+
+  document.getElementById('evEmpty').style.display='none';
+  document.getElementById('evContent').style.display='flex';
+
+  // Ribbon
+  const rib=document.getElementById('evRibbon');
+  rib.style.borderBottom=`1px solid rgba(${currentPersona.rgb},.15)`;
+  document.getElementById('evrAv').textContent=currentPersona.initial;
+  document.getElementById('evrAv').style.background=currentPersona.color;
+  document.getElementById('evrTxt').innerHTML=
+    `Reading in <strong style="color:${currentPersona.color};">${currentPersona.name}</strong> · ${folderIcons[currentFolder]} ${folderLabels[currentFolder]}`;
+
+  // Header
+  document.getElementById('evSubj').textContent=email.subj;
+  document.getElementById('evAv').textContent=email.av;
+  document.getElementById('evAv').style.background=email.ac;
+  document.getElementById('evSname').textContent=email.sender;
+  document.getElementById('evSemail').textContent=email.se;
+  document.getElementById('evTo').textContent='→ '+currentPersona.email;
+
+  // Reply btn
+  const rb=document.getElementById('replyBtn');
+  rb.style.background=currentPersona.color;
+  rb.style.borderColor=currentPersona.color;
+
+  // Body
+  document.getElementById('evBody').innerHTML=email.body||`<p>No preview available.</p>`;
+
+  // Reply from
+  document.getElementById('rfAv').textContent=currentPersona.initial;
+  document.getElementById('rfAv').style.background=currentPersona.color;
+  document.getElementById('rfAddr').textContent=currentPersona.email;
+  document.getElementById('rfPersona').textContent=currentPersona.name;
+  document.getElementById('rfPersona').style.background=currentPersona.color;
+  document.getElementById('replySendBtn').style.background=currentPersona.color;
+}
+
+function focusReply(){ document.getElementById('replyTa').focus(); }
+
+function toggleStar(){
+  if(!selectedEmail) return;
+  selectedEmail.starred=!selectedEmail.starred;
+  showToast(selectedEmail.starred?'⭐':'☆',selectedEmail.starred?'Starred':'Unstarred',selectedEmail.subj);
+  renderEmailList();
+}
+
+function markAllRead(){
+  (currentPersona.folders[currentFolder]||[]).forEach(e=>e.unread=false);
+  renderEmailList();
+  updateTotalUnread();
+  renderSidebarNav();
+  showToast('✓','All read','Marked all as read');
+}
+
+function sendReply(){
+  const txt=document.getElementById('replyTa').value.trim();
+  if(!txt){showToast('⚠️','Empty','Please write something');return;}
+  // Add to sent
+  const sent={
+    id:Date.now(),sender:'To: '+selectedEmail.sender,se:selectedEmail.se,
+    av:selectedEmail.av,ac:selectedEmail.ac,
+    subj:'Re: '+selectedEmail.subj,prev:txt.slice(0,80)+'...',
+    body:`<p class="gr">You replied:</p><p>${txt}</p>`,
+    time:'Just now',unread:false,starred:false,tag:'Sent'
+  };
+  currentPersona.folders.sent.unshift(sent);
+  document.getElementById('replyTa').value='';
+  showToast('✉️','Reply sent','Sent as '+currentPersona.email);
+}
+
+// ========== SUBTAB ==========
+function setSubTab(tab,el){
+  currentSubTab=tab;
+  document.querySelectorAll('.etab').forEach(t=>t.classList.remove('et-active'));
+  el.classList.add('et-active');
+  el.style.borderBottomColor=currentPersona.color;
+  renderEmailList();
+}
+
+function filterEmails(val){ renderEmailList(val); }
+
+// ========== COMPOSE ==========
+function openCompose(){
+  const p=currentPersona;
+  document.getElementById('cfAv').textContent=p.initial;
+  document.getElementById('cfAv').style.background=p.color;
+  document.getElementById('cfAddr').textContent=p.email;
+  document.getElementById('cfBadge').textContent=p.name;
+  document.getElementById('cfBadge').style.background=p.color;
+  document.getElementById('csendBtn').style.background=p.color;
+  document.getElementById('compOverlay').classList.add('open');
+}
+function closeCompose(){ document.getElementById('compOverlay').classList.remove('open'); }
+
+function sendEmail(){
+  const to=document.getElementById('cTo').value.trim();
+  const subj=document.getElementById('cSubj').value.trim();
+  const body=document.getElementById('cBody').value.trim();
+  if(!to||!subj){showToast('⚠️','Missing fields','Fill in To and Subject');return;}
+  const sent={
+    id:Date.now(),sender:'To: '+to,se:to,av:'→',ac:'#44445a',
+    subj,prev:body.slice(0,80)||'(no body)',
+    body:`<p class="gr">Sent to: ${to}</p><p>${body}</p>`,
+    time:'Just now',unread:false,starred:false,tag:'Sent'
+  };
+  currentPersona.folders.sent.unshift(sent);
+  document.getElementById('cTo').value='';
+  document.getElementById('cSubj').value='';
+  document.getElementById('cBody').value='';
+  closeCompose();
+  showToast('✉️','Sent!','Sent as '+currentPersona.email);
+}
+
+// ========== ADD PERSONA ==========
+function openAddPersona(){
+  renderTypeGrid();renderColorPick();
+  document.getElementById('apOverlay').classList.add('open');
+}
+function closeAddPersona(){ document.getElementById('apOverlay').classList.remove('open'); }
+
+function renderTypeGrid(){
+  const g=document.getElementById('typeGrid'); g.innerHTML='';
+  pTypes.forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.className='type-card'+(i===selectedType?' tsel':'');
+    d.innerHTML=`<div class="tc-icon">${t.icon}</div><div class="tc-name">${t.name}</div><div class="tc-desc">${t.desc}</div>`;
+    d.onclick=()=>{selectedType=i;renderTypeGrid();};
+    g.appendChild(d);
+  });
+}
+
+function renderColorPick(){
+  const p=document.getElementById('cpick'); p.innerHTML='';
+  colors.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='cdot'+(c===newPersonaColor?' csel':'');
+    d.style.background=c;
+    d.onclick=()=>{newPersonaColor=c;renderColorPick();};
+    p.appendChild(d);
+  });
+  document.getElementById('apBtn').style.background=newPersonaColor;
+}
+
+function hexToRgb(h){
+  return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`;
+}
+
+function createPersona(){
+  const name=document.getElementById('apName').value.trim();
+  const email=document.getElementById('apEmail').value.trim();
+  if(!name||!email){showToast('⚠️','Missing info','Fill in name and email');return;}
+  personas.push({
+    id:'p'+Date.now(), name, initial:name[0].toUpperCase(), email,
+    color:newPersonaColor, rgb:hexToRgb(newPersonaColor),
+    storage:'0 MB', storPct:0,
+    folders:{inbox:[],sent:[],drafts:[],starred:[],archive:[],spam:[],trash:[]}
+  });
+  document.getElementById('apName').value='';
+  document.getElementById('apEmail').value='';
+  closeAddPersona();
+  renderPersonaList();
+  showToast('✦','Persona created!',name+' · '+email+' · All folders ready');
+}
+
+// ========== SETTINGS ==========
+function openSettings(){ document.getElementById('settingsPanel').classList.add('sopen'); }
+function closeSettings(){ document.getElementById('settingsPanel').classList.remove('sopen'); }
+
+// ========== TOAST ==========
+function showToast(icon,title,sub){
+  document.getElementById('ti').textContent=icon;
+  document.getElementById('ttTitle').textContent=title;
+  document.getElementById('ttSub').textContent=sub;
+  const t=document.getElementById('toast');
+  t.classList.add('tshow');
+  setTimeout(()=>t.classList.remove('tshow'),3500);
+}
+
+// Close on overlay click
+document.getElementById('compOverlay').onclick=e=>{if(e.target===e.currentTarget)closeCompose();};
+document.getElementById('apOverlay').onclick=e=>{if(e.target===e.currentTarget)closeAddPersona();};
+</script>
+</body>
+</html>
